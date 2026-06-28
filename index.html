@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>杨彬彬 - 经营分析师</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    /* ========== CSS Reset & Variables ========== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #ffffff; --bg-secondary: #f8f9fa; --text: #1a1a2e; --text-secondary: #4a4a68;
+      --card: rgba(255,255,255,0.85); --card-border: rgba(0,0,0,0.08); --accent: #4361ee;
+      --accent-light: rgba(67,97,238,0.1); --shadow: 0 8px 32px rgba(0,0,0,0.1);
+      --particle: rgba(67, 97, 238, 0.6); --gradient-start: #4361ee; --gradient-end: #7209b7;
+    }
+    [data-theme="dark"] {
+      --bg: #0f0f1a; --bg-secondary: #1a1a2e; --text: #e0e0e0; --text-secondary: #a0a0b8;
+      --card: rgba(30, 30, 50, 0.85); --card-border: rgba(255,255,255,0.08); --accent: #4cc9f0;
+      --accent-light: rgba(76,201,240,0.1); --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --particle: rgba(76, 201, 240, 0.8); --gradient-start: #4cc9f0; --gradient-end: #7209b7;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.7;
+      transition: background 0.5s, color 0.5s; overflow-x: hidden;
+    }
+    #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { #particles { display: none; } body { background: var(--bg); } }
+  </style>
+</head>
+<body>
+  <div id="auth-overlay" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;">
+    <div class="auth-box" style="text-align:center;padding:3rem;border-radius:1rem;background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--card-border);box-shadow:var(--shadow);">
+      <h2 style="font-size:1.8rem;margin-bottom:0.5rem;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">🔐 请输入访问密码</h2>
+      <input type="password" id="auth-password" placeholder="输入密码" autocomplete="off" style="padding:0.8rem 1.2rem;border:2px solid var(--card-border);border-radius:0.5rem;font-size:1.2rem;text-align:center;background:var(--bg-secondary);color:var(--text);width:200px;outline:none;transition:border-color 0.3s;">
+      <div class="auth-error" id="auth-error" style="color:#e74c3c;font-size:0.9rem;min-height:1.4em;"></div>
+      <button onclick="checkAuth()" style="padding:0.8rem 2rem;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));color:white;border:none;border-radius:0.5rem;font-size:1rem;cursor:pointer;margin-top:1rem;transition:transform 0.2s,box-shadow 0.2s;">进入</button>
+    </div>
+  </div>
+
+  <canvas id="particles"></canvas>
+
+  <nav style="position:fixed;top:0;width:100%;z-index:100;padding:1rem 2rem;background:var(--card);backdrop-filter:blur(20px);border-bottom:1px solid var(--card-border);transition:all 0.3s;">
+    <div class="nav-container" style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;">
+      <div class="nav-logo" style="font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">杨彬彬</div>
+      <ul class="nav-links" style="display:flex;gap:2rem;list-style:none;">
+        <li><a href="#hero">首页</a></li>
+        <li><a href="#skills">技能</a></li>
+        <li><a href="#experience">经历</a></li>
+        <li><a href="#projects">项目</a></li>
+        <li><a href="#education">教育</a></li>
+        <li><a href="#contact">联系</a></li>
+      </ul>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换主题" style="background:none;border:1px solid var(--card-border);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.3s;color:var(--text);">🌓</button>
+      <button class="hamburger" onclick="toggleMobileNav()" style="display:none;flex-direction:column;gap:4px;cursor:pointer;background:none;border:none;padding:4px;">
+        <span style="width:24px;height:2px;background:var(--text);transition:all 0.3s;"></span>
+        <span style="width:24px;height:2px;background:var(--text);transition:all 0.3s;"></span>
+        <span style="width:24px;height:2px;background:var(--text);transition:all 0.3s;"></span>
+      </button>
+    </div>
+  </nav>
+
+  <main style="position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:6rem 1.5rem 3rem;">
+    <section id="hero" style="margin-bottom:5rem;opacity:0;transform:translateY(30px);transition:opacity 0.8s,transform 0.8s;">
+      <h1 style="font-size:3rem;margin-bottom:1rem;text-align:center;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">杨彬彬</h1>
+      <div class="typewriter" style="font-size:1.4rem;color:var(--text-secondary);min-height:2rem;text-align:center;">
+        <span id="typewriter-text"></span><span class="typewriter-cursor" style="display:inline-block;width:2px;height:1.2em;background:var(--accent);margin-left:2px;animation:blink 1s infinite;vertical-align:text-bottom;"></span>
+      </div>
+      <style>@keyframes blink{50%{opacity:0;}}</style>
+      <div class="hero-info" style="margin-top:1.5rem;font-size:1rem;color:var(--text-secondary);text-align:center;"><p>6年互联网经验 · 数据分析 / 经营分析 · 成都</p></div>
+      <div class="stats-row" style="display:flex;justify-content:center;gap:3rem;margin-top:2rem;flex-wrap:wrap;">
+        <div class="stat-item" style="text-align:center;"><div class="stat-number" data-target="7" style="font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0</div><div class="stat-label" style="font-size:0.9rem;color:var(--text-secondary);margin-top:0.3rem;">年经验</div></div>
+        <div class="stat-item" style="text-align:center;"><div class="stat-number" data-target="30" style="font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0</div><div class="stat-label" style="font-size:0.9rem;color:var(--text-secondary);margin-top:0.3rem;">+ 项目</div></div>
+        <div class="stat-item" style="text-align:center;"><div class="stat-number" data-target="10" style="font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0</div><div class="stat-label" style="font-size:0.9rem;color:var(--text-secondary);margin-top:0.3rem;">+ 核心指标</div></div>
+      </div>
+    </section>
+
+    <section id="experience" style="margin-bottom:5rem;opacity:0;transform:translateY(30px);transition:opacity 0.8s,transform 0.8s;">
+      <h2 class="section-title" style="font-size:2rem;margin-bottom:2rem;text-align:center;position:relative;">工作经历</h2>
+      <div class="timeline" style="position:relative;padding-left:2rem;">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--gradient-start),var(--gradient-end));"></div>
+        <div class="timeline-item" style="position:relative;margin-bottom:2.5rem;padding-left:2rem;">
+          <div style="position:absolute;left:-2rem;top:0.5rem;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 3px var(--accent);"></div>
+          <div class="timeline-date" style="font-size:0.85rem;color:var(--accent);font-weight:600;margin-bottom:0.3rem;">2022 - 至今</div>
+          <div class="timeline-card" style="padding:1.2rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:0.75rem;box-shadow:var(--shadow);transition:transform 0.3s;">
+            <h3 style="font-size:1.1rem;margin-bottom:0.3rem;">经营分析师</h3>
+            <div class="company" style="font-size:0.95rem;color:var(--accent);margin-bottom:0.5rem;">字节跳动 · 成都</div>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">负责商业化经营分析，搭建核心指标体系，支持业务决策。</p>
+          </div>
+        </div>
+        <div class="timeline-item" style="position:relative;margin-bottom:2.5rem;padding-left:2rem;">
+          <div style="position:absolute;left:-2rem;top:0.5rem;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 3px var(--accent);"></div>
+          <div class="timeline-date" style="font-size:0.85rem;color:var(--accent);font-weight:600;margin-bottom:0.3rem;">2020 - 2022</div>
+          <div class="timeline-card" style="padding:1.2rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:0.75rem;box-shadow:var(--shadow);transition:transform 0.3s;">
+            <h3 style="font-size:1.1rem;margin-bottom:0.3rem;">数据分析师</h3>
+            <div class="company" style="font-size:0.95rem;color:var(--accent);margin-bottom:0.5rem;">美团 · 成都</div>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">负责用户行为分析，构建用户画像模型，输出业务洞察报告。</p>
+          </div>
+        </div>
+        <div class="timeline-item" style="position:relative;margin-bottom:2.5rem;padding-left:2rem;">
+          <div style="position:absolute;left:-2rem;top:0.5rem;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 3px var(--accent);"></div>
+          <div class="timeline-date" style="font-size:0.85rem;color:var(--accent);font-weight:600;margin-bottom:0.3rem;">2018 - 2020</div>
+          <div class="timeline-card" style="padding:1.2rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:0.75rem;box-shadow:var(--shadow);transition:transform 0.3s;">
+            <h3 style="font-size:1.1rem;margin-bottom:0.3rem;">数据分析师</h3>
+            <div class="company" style="font-size:0.95rem;color:var(--accent);margin-bottom:0.5rem;">滴滴出行 · 北京</div>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">负责出行数据监控与异常检测，支撑运营策略优化。</p>
+          </div>
+        </div>
+        <div class="timeline-item" style="position:relative;margin-bottom:2.5rem;padding-left:2rem;">
+          <div style="position:absolute;left:-2rem;top:0.5rem;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 3px var(--accent);"></div>
+          <div class="timeline-date" style="font-size:0.85rem;color:var(--accent);font-weight:600;margin-bottom:0.3rem;">2017 - 2018</div>
+          <div class="timeline-card" style="padding:1.2rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:0.75rem;box-shadow:var(--shadow);transition:transform 0.3s;">
+            <h3 style="font-size:1.1rem;margin-bottom:0.3rem;">数据分析助理</h3>
+            <div class="company" style="font-size:0.95rem;color:var(--accent);margin-bottom:0.5rem;">橙车科技 · 成都</div>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">协助完成数据提取、报表开发和业务指标梳理。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" style="margin-bottom:5rem;opacity:0;transform:translateY(30px);transition:opacity 0.8s,transform 0.8s;">
+      <h2 class="section-title" style="font-size:2rem;margin-bottom:2rem;text-align:center;position:relative;">项目经验</h2>
+      <div class="projects-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;">
+        <div class="project-card" onclick="openModal('project1')" style="padding:1.5rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:1rem;box-shadow:var(--shadow);cursor:pointer;transition:transform 0.3s,box-shadow 0.3s;">
+          <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">商业化经营指标体系搭建</h3>
+          <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">从0到1搭建商业化核心指标体系，覆盖收入、成本、利润等关键维度。</p>
+          <span class="project-tag" style="display:inline-block;padding:0.2rem 0.6rem;background:var(--accent-light);color:var(--accent);border-radius:0.3rem;font-size:0.8rem;margin-top:0.8rem;">指标体系</span>
+        </div>
+        <div class="project-card" onclick="openModal('project2')" style="padding:1.5rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:1rem;box-shadow:var(--shadow);cursor:pointer;transition:transform 0.3s,box-shadow 0.3s;">
+          <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">用户行为分析与画像系统</h3>
+          <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">基于大数据构建用户画像体系，支持精细化运营和个性化推荐。</p>
+          <span class="project-tag" style="display:inline-block;padding:0.2rem 0.6rem;background:var(--accent-light);color:var(--accent);border-radius:0.3rem;font-size:0.8rem;margin-top:0.8rem;">用户分析</span>
+        </div>
+        <div class="project-card" onclick="openModal('project3')" style="padding:1.5rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:1rem;box-shadow:var(--shadow);cursor:pointer;transition:transform 0.3s,box-shadow 0.3s;">
+          <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">数据可视化平台</h3>
+          <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">搭建自助式数据可视化平台，降低业务数据获取门槛，提升分析效率。</p>
+          <span class="project-tag" style="display:inline-block;padding:0.2rem 0.6rem;background:var(--accent-light);color:var(--accent);border-radius:0.3rem;font-size:0.8rem;margin-top:0.8rem;">可视化</span>
+        </div>
+        <div class="project-card" onclick="openModal('project4')" style="padding:1.5rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:1rem;box-shadow:var(--shadow);cursor:pointer;transition:transform 0.3s,box-shadow 0.3s;">
+          <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">异常检测与智能预警</h3>
+          <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">构建业务异常检测模型，实现指标异动实时预警，缩短问题响应时间。</p>
+          <span class="project-tag" style="display:inline-block;padding:0.2rem 0.6rem;background:var(--accent-light);color:var(--accent);border-radius:0.3rem;font-size:0.8rem;margin-top:0.8rem;">智能预警</span>
+        </div>
+      </div>
+    </section>
+    <section id="education" style="margin-bottom:5rem;opacity:0;transform:translateY(30px);transition:opacity 0.8s,transform 0.8s;">
+      <h2 class="section-title" style="font-size:2rem;margin-bottom:2rem;text-align:center;position:relative;">教育背景</h2>
+      <div class="education-card" style="padding:1.5rem;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--card-border);border-radius:1rem;box-shadow:var(--shadow);">
+        <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">成都信息工程大学</h3>
+        <p style="color:var(--text-secondary);margin-top:0.5rem;">信息管理与信息系统 · 本科</p>
+      </div>
+    </section>
+
+    <section id="contact" style="margin-bottom:5rem;opacity:0;transform:translateY(30px);transition:opacity 0.8s,transform 0.8s;">
+      <h2 class="section-title" style="font-size:2rem;margin-bottom:2rem;text-align:center;position:relative;">联系方式</h2>
+      <div class="contact-links" style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;">
+        <a href="mailto:example@email.com" class="contact-link" style="padding:0.8rem 1.5rem;background:var(--accent-light);color:var(--accent);text-decoration:none;border-radius:0.5rem;font-weight:600;transition:all 0.3s;">📧 邮箱</a>
+        <a href="#" class="contact-link" style="padding:0.8rem 1.5rem;background:var(--accent-light);color:var(--accent);text-decoration:none;border-radius:0.5rem;font-weight:600;transition:all 0.3s;">💻 GitHub</a>
+        <a href="#" class="contact-link" style="padding:0.8rem 1.5rem;background:var(--accent-light);color:var(--accent);text-decoration:none;border-radius:0.5rem;font-weight:600;transition:all 0.3s;">💼 LinkedIn</a>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align:center;padding:2rem;color:var(--text-secondary);font-size:0.9rem;border-top:1px solid var(--card-border);">
+    <p>© 2024 杨彬彬 · 经营分析师 · 成都</p>
+  </footer>
+
+  <div id="project-modal" class="modal-overlay" style="position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(5px);" onclick="closeModal(event)">
+    <div class="modal-content" style="background:var(--card);border:1px solid var(--card-border);border-radius:1rem;padding:2rem;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow);position:relative;">
+      <button class="modal-close" onclick="closeModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.3s;">×</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    // ========== Auth ==========
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    async function checkAuth() {
+      const input = document.getElementById('auth-password').value;
+      const errorEl = document.getElementById('auth-error');
+      const hash = await sha256(input);
+      const validHash = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8';
+      if (hash === validHash) {
+        localStorage.setItem('auth_hash', hash);
+        document.getElementById('auth-overlay').classList.add('hidden');
+        errorEl.textContent = '';
+      } else {
+        errorEl.textContent = '密码错误，请重试';
+      }
+    }
+    document.getElementById('auth-password')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAuth(); });
+    (async () => { if (localStorage.getItem('auth_hash')) { document.getElementById('auth-overlay').classList.add('hidden'); } })();
+
+    // ========== Theme ==========
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+      localStorage.setItem('theme', current === 'dark' ? 'light' : 'dark');
+    }
+    (() => {
+      const saved = localStorage.getItem('theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+      else if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+
+    // ========== Particles ==========
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const isMobile = window.innerWidth < 768;
+    const PARTICLE_COUNT = isMobile ? 50 : 120;
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, size: Math.random()*2+1 });
+      }
+    }
+    function drawParticles() {
+      if (document.hidden) { requestAnimationFrame(drawParticles); return; }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const style = getComputedStyle(document.documentElement);
+      const color = style.getPropertyValue('--particle').trim();
+      particles.forEach((p, i) => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill();
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = p.x - particles[j].x; const dy = p.y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 120) {
+            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y);
+            const alpha = 0.15 * (1 - dist/120);
+            ctx.strokeStyle = color.replace(/0\.[0-9]+/, alpha.toFixed(2));
+            ctx.lineWidth = 0.5; ctx.stroke();
+          }
+        }
+      });
+      requestAnimationFrame(drawParticles);
+    }
+    resizeCanvas(); createParticles();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) drawParticles();
+    window.addEventListener('resize', () => { resizeCanvas(); createParticles(); });
+
+    // ========== Typewriter ==========
+    const phrases = ['经营分析师', '数据分析专家', '指标体系建设者'];
+    let phraseIdx = 0, charIdx = 0, isDeleting = false;
+    const typeEl = document.getElementById('typewriter-text');
+    function typewrite() {
+      const current = phrases[phraseIdx];
+      if (!isDeleting) {
+        typeEl.textContent = current.substring(0, charIdx + 1); charIdx++;
+        if (charIdx === current.length) { setTimeout(() => { isDeleting = true; typewrite(); }, 2000); return; }
+        setTimeout(typewrite, 100 + Math.random()*100);
+      } else {
+        typeEl.textContent = current.substring(0, charIdx - 1); charIdx--;
+        if (charIdx === 0) { isDeleting = false; phraseIdx = (phraseIdx + 1) % phrases.length; setTimeout(typewrite, 500); return; }
+        setTimeout(typewrite, 50);
+      }
+    }
+    typewrite();
+
+    // ========== Scroll Animations ==========
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          if (entry.target.id === 'skills') document.querySelectorAll('.skill-fill').forEach(bar => { bar.style.width = bar.dataset.width; });
+          if (entry.target.id === 'hero') document.querySelectorAll('.stat-number').forEach(el => animateCounter(el));
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+    // ========== Counter ==========
+    function animateCounter(el) {
+      const target = parseInt(el.dataset.target); const duration = 2000; const start = performance.now();
+      function update(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        el.textContent = Math.floor(progress * target);
+        if (progress < 1) requestAnimationFrame(update); else el.textContent = target + (target === 7 ? '' : '+');
+      }
+      requestAnimationFrame(update);
+    }
+
+    // ========== Nav Scroll Spy ==========
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => { if (scrollY >= section.offsetTop - 200) current = section.getAttribute('id'); });
+      navLinks.forEach(link => { link.classList.remove('active'); if (link.getAttribute('href') === '#' + current) link.classList.add('active'); });
+    });
+
+    // ========== Modal ==========
+    const projectData = {
+      project1: {
+        title: '商业化经营指标体系搭建',
+        background: '随着业务规模扩大，缺乏统一指标口径，各部门数据不一致，决策效率低。',
+        responsibility: '负责指标体系建设，包括指标定义、口径统一、数据采集和可视化展示。',
+        achievement: '搭建了包含 50+ 核心指标的体系，数据一致性提升至 98%，决策效率提升 40%。'
+      },
+      project2: {
+        title: '用户行为分析与画像系统',
+        background: '需要了解用户特征和行为模式，支持精细化运营和个性化推荐。',
+        responsibility: '负责用户画像模型构建，基于行为数据提取用户特征标签。',
+        achievement: '构建了 200+ 标签的用户画像体系，支撑 10+ 业务场景，转化率提升 25%。'
+      },
+      project3: {
+        title: '数据可视化平台',
+        background: '业务人员缺乏自助取数能力，依赖分析师提数，效率低下。',
+        responsibility: '负责可视化平台设计和开发，提供拖拽式报表构建工具。',
+        achievement: '平台覆盖 30+ 核心报表，自助取数占比从 20% 提升至 80%，分析师提数工作量减少 60%。'
+      },
+      project4: {
+        title: '异常检测与智能预警',
+        background: '指标异动发现滞后，问题响应时间长，影响业务稳定性。',
+        responsibility: '负责异常检测算法选型和预警系统开发。',
+        achievement: '实现核心指标实时监控，异常发现时间从 24 小时缩短至 15 分钟，问题响应效率提升 90%。'
+      }
+    };
+    function openModal(id) {
+      const data = projectData[id];
+      if (!data) return;
+      document.getElementById('modal-body').innerHTML = `
+        <h3 style="font-size:1.3rem;margin-bottom:1rem;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${data.title}</h3>
+        <div class="modal-section"><h4>项目背景</h4><p>${data.background}</p></div>
+        <div class="modal-section"><h4>我的职责</h4><p>${data.responsibility}</p></div>
+        <div class="modal-section"><h4>核心成果</h4><p>${data.achievement}</p></div>
+      `;
+      document.getElementById('project-modal').classList.add('active');
+    }
+    function closeModal(event) {
+      if (!event || event.target === document.getElementById('project-modal') || event.target.classList.contains('modal-close')) {
+        document.getElementById('project-modal').classList.remove('active');
+      }
+    }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    // ========== Mobile Nav ==========
+    function toggleMobileNav() {
+      const navLinks = document.querySelector('.nav-links');
+      navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+      if (navLinks.style.display === 'flex') {
+        navLinks.style.position = 'absolute'; navLinks.style.top = '100%'; navLinks.style.left = '0';
+        navLinks.style.right = '0'; navLinks.style.background = 'var(--card)'; navLinks.style.flexDirection = 'column';
+        navLinks.style.padding = '1rem'; navLinks.style.gap = '1rem'; navLinks.style.borderBottom = '1px solid var(--card-border)';
+      }
+    }
+
+    // ========== Charts ==========
+    function initCharts() {
+      const radarDom = document.getElementById('radar-chart');
+      const barDom = document.getElementById('bar-chart');
+      if (radarDom) {
+        const radarChart = echarts.init(radarDom);
+        radarChart.setOption({
+          radar: { indicator: [{name:'SQL',max:100},{name:'Python',max:100},{name:'Tableau',max:100},{name:'指标体系',max:100},{name:'业务洞察',max:100}], shape:'polygon', splitNumber:4 },
+          series: [{ type:'radar', data:[{value:[95,88,90,92,88],name:'能力评估'}], areaStyle:{opacity:0.3} }]
+        });
+      }
+      if (barDom) {
+        const barChart = echarts.init(barDom);
+        barChart.setOption({
+          xAxis: { type:'category', data:['SQL','Python','Tableau','指标体系','业务洞察'] },
+          yAxis: { type:'value', max:100 },
+          series: [{ type:'bar', data:[95,88,90,92,88], itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#4361ee'},{offset:1,color:'#7209b7'}])}, barWidth:'50%' }]
+        });
+      }
+    }
+    setTimeout(initCharts, 100);
+    document.querySelector('.theme-toggle')?.addEventListener('click', () => { setTimeout(initCharts, 50); });
+  </script>
+</body>
+</html>
