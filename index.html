@@ -184,7 +184,7 @@
       const input = document.getElementById('auth-password').value;
       const errorEl = document.getElementById('auth-error');
       const hash = await sha256(input);
-      const validHash = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8';
+      const validHash = 'b72b8ff4cac9641a216743dce4985c75e550a690abdc65e5ceff8fca8428d70b';
       if (hash === validHash) {
         localStorage.setItem('auth_hash', hash);
         document.getElementById('auth-overlay').classList.add('hidden');
